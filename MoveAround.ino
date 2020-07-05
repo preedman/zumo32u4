@@ -27,6 +27,8 @@ int32_t magnitudeSquared;
  int countsLeft;
   int countsRight;
 bool hitSomething = false;
+bool leftPathClear = false;
+bool rightPathClear = false;
 
 
 #define Kp 1
@@ -68,12 +70,41 @@ void loop() {
               reverse();
               turnRight(90);
           } else {
-             turnRight(90);
+             
+             if (rightPathClear) {
+               turnRight(90);
+               leftPathClear = false;
+               rightPathClear = false;
+             } else {
+                turnLeft(90);
+                leftPathClear = false;
+                rightPathClear = false;
+             }
           } 
     }  
      
         
     
+  }
+  
+}
+
+void scanLeftRight() {
+
+  leftPathClear = false;
+  rightPathClear = false;
+
+  proxSensors.read();
+
+  left_sensor = proxSensors.countsLeftWithLeftLeds();
+  centerLeftSensor = proxSensors.countsFrontWithLeftLeds();
+  centerRightSensor = proxSensors.countsFrontWithRightLeds();
+  right_sensor = proxSensors.countsRightWithRightLeds();
+
+  if (centerLeftSensor < centerRightSensor) {            //  this test indicates left might be more clear than right 
+    leftPathClear = true;
+  } else {
+    rightPathClear = true;
   }
   
 }
@@ -121,6 +152,11 @@ void forward() {
 
 
           if (centerLeftSensor >= 5 && centerRightSensor >= 5) {  // something is in front of robot while going forward
+                if (centerLeftSensor < centerRightSensor) {            //  this test indicates left might be more clear than right 
+                   leftPathClear = true;
+                } else {
+                   rightPathClear = true;
+                }
                 break;
           }
           if (magnitudeSquared > 250000000) {   // hit something
@@ -138,6 +174,24 @@ void forward() {
       }   
    
 }
+
+// Turn left
+void turnLeft(int degrees) {
+  turnSensorReset();
+  motors.setSpeeds(-turnSpeed, turnSpeed);
+  int angle = 0;
+  do {
+    delay(1);
+    turnSensorUpdate();
+    angle = (((int32_t)turnAngle >> 16) * 360) >> 16;
+    lcd.gotoXY(0, 0);
+    lcd.print(angle);
+    lcd.print(" ");
+  } while (angle < degrees);
+  motors.setSpeeds(0, 0);
+  delay(500);
+}
+
 
 // Turn right
 void turnRight(int degrees) {
