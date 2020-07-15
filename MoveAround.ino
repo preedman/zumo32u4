@@ -69,6 +69,8 @@ void loop() {
           if (hitSomething) {
               reverse();
               turnRight(90);
+              leftPathClear = false;
+               rightPathClear = false;
           } else {
              
              if (rightPathClear) {
@@ -133,6 +135,7 @@ void forward() {
      int countsRight = encoders.getCountsAndResetRight();
      int error;
       int correction;
+     long randNumber;
       motors.setSpeeds(currentSpeedLeft,currentSpeedRight);    // set the speed
       
      while(1) {
@@ -154,11 +157,26 @@ void forward() {
           if (centerLeftSensor >= 5 && centerRightSensor >= 5) {  // something is in front of robot while going forward
                 if (centerLeftSensor < centerRightSensor) {            //  this test indicates left might be more clear than right 
                    leftPathClear = true;
-                } else {
+                   break;
+                } else if (centerLeftSensor > centerRightSensor) {     // right is clearer
                    rightPathClear = true;
+                   break;
+                } else if (centerLeftSensor == centerRightSensor) {    // both the same - toss a coin
+                   randNumber = random(10, 21);
+                   if (randNumber <= 15 ) {
+                        leftPathClear = true;
+                        break;
+                   } else {
+                        rightPathClear = true;
+                        break;
+                   }
+                  
                 }
-                break;
           }
+                            
+          
+           
+          
           if (magnitudeSquared > 250000000) {   // hit something
                 hitSomething = true;
                 break;
